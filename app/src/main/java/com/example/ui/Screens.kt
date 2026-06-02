@@ -56,22 +56,28 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.sin
 
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
+
 @Composable
 fun JaleesAppContent(viewModel: JaleesViewModel) {
     val currentScreen by viewModel.currentScreen.collectAsState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Crossfade(targetState = currentScreen, label = "ScreenTransition") { screen ->
-            when (screen) {
-                is AppScreen.Onboarding -> OnboardingScreen(viewModel)
-                is AppScreen.Main -> MainScreen(viewModel)
-                is AppScreen.Detail -> SessionDetailScreen(
-                    sessionId = screen.sessionId,
-                    viewModel = viewModel
-                )
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Crossfade(targetState = currentScreen, label = "ScreenTransition") { screen ->
+                when (screen) {
+                    is AppScreen.Onboarding -> OnboardingScreen(viewModel)
+                    is AppScreen.Main -> MainScreen(viewModel)
+                    is AppScreen.Detail -> SessionDetailScreen(
+                        sessionId = screen.sessionId,
+                        viewModel = viewModel
+                    )
+                }
             }
         }
     }
