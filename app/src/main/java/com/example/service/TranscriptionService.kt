@@ -15,6 +15,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
@@ -39,6 +40,8 @@ class TranscriptionService : Service() {
     private var chunkCount = 0
     private var lastSpeechTime: Long = 0
     private var isSpeechActive = false
+
+    private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
         private const val CHANNEL_ID = "jalees_background_recording"
@@ -78,6 +81,11 @@ class TranscriptionService : Service() {
 
         TranscriptionManager.setListening(true)
         TranscriptionManager.setActiveSession(currentSessionId)
+
+        // Acquire WakeLock to keep CPU running
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TranscriptionService::WakeLock")
+        wakeLock?.acquire(10 * 60 * 60 * 1000L /*10 hours max*/)
 
         // Show Foreground permanent Notification to satisfy Android policies
         val notification = createNotification()
@@ -161,6 +169,17 @@ class TranscriptionService : Service() {
 
         TranscriptionManager.setListening(false)
         TranscriptionManager.setActiveSession(null)
+        
+        // Release WakeLock
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        wakeLock = null
+        
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
