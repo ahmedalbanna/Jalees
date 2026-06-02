@@ -23,6 +23,7 @@ import com.example.R
 import com.example.data.AppDatabase
 import com.example.data.Session
 import com.example.data.TranscriptionRepository
+import com.example.vad.VadLib
 import kotlinx.coroutines.*
 import kotlin.math.log10
 import kotlin.math.max
@@ -198,6 +199,9 @@ class TranscriptionService : Service() {
             simulateAudioCapture()
             return@withContext
         }
+        
+        val vadLib = VadLib()
+        var vadPtr = 0L
 
         try {
             audioRecord = AudioRecord(
@@ -212,33 +216,36 @@ class TranscriptionService : Service() {
                 simulateAudioCapture()
                 return@withContext
             }
+            
+            vadPtr = vadLib.initVad()
 
             audioRecord?.startRecording()
-            val buffer = ShortArray(1024)
+            // Using 160 samples (10ms) per frame for WebRTC VAD
+            val frameSize = 160
+            val buffer = ShortArray(frameSize)
 
             var lastDecibel = 20f
-            var silentPeriodsStart: Long = System.currentTimeMillis()
 
             while (isRecording) {
                 val readSize = audioRecord?.read(buffer, 0, buffer.size) ?: -1
                 if (readSize > 0) {
-                    // Calculate RMS amplitude for real-time sound fluctuation
                     var sum = 0.0
                     for (i in 0 until readSize) {
                         sum += buffer[i] * buffer[i]
                     }
                     val rms = Math.sqrt(sum / readSize)
-                    
-                    // Decibel calculation: map amplitude value smoothly between 15dB and 90dB
                     val rawDb = if (rms > 0) 20 * log10(rms) else 15.0
                     val db = max(15.0, Math.min(95.0, rawDb)).toFloat()
                     
-                    // Smoothing factor
                     lastDecibel = lastDecibel * 0.7f + db * 0.3f
                     TranscriptionManager.updateDbLevel(lastDecibel)
 
-                    // VAD threshold gate (e.g. 48dB is normal speech level)
-                    val isSpeechFound = lastDecibel > 46f
+                    // Use VAD library for robust speech detection instead of a simple threshold
+                    val isSpeechFound = if (vadPtr != 0L) {
+                        vadLib.isSpeech(vadPtr, buffer)
+                    } else {
+                        lastDecibel > 46f
+                    }
                     TranscriptionManager.updateSpeechState(isSpeechFound)
 
                     val now = System.currentTimeMillis()
@@ -246,16 +253,13 @@ class TranscriptionService : Service() {
                         lastSpeechTime = now
                         if (!isSpeechActive) {
                             isSpeechActive = true
-                            // Live drafting simulation in Arabic
                             val targetPhrase = TranscriptionManager.getSimulatedPhrase(chunkCount)
                             TranscriptionManager.updateLiveDraft(targetPhrase)
                         }
                     } else {
-                        // User is silent
                         if (isSpeechActive) {
                             val elapsedSilence = now - lastSpeechTime
-                            if (elapsedSilence >= 2000L) { // Silence limit threshold (2 seconds)
-                                // Commit speech chunk!
+                            if (elapsedSilence >= 2000L) {
                                 val relativeTimeMs = lastSpeechTime - sessionStartTime
                                 val finalText = TranscriptionManager.getSimulatedPhrase(chunkCount)
                                 
@@ -274,11 +278,14 @@ class TranscriptionService : Service() {
                         }
                     }
                 }
-                delay(30) // analysis frequency: every 30ms
             }
         } catch (e: Exception) {
             e.printStackTrace()
             simulateAudioCapture()
+        } finally {
+            if (vadPtr != 0L) {
+                vadLib.freeVad(vadPtr)
+            }
         }
     }
 
