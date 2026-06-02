@@ -1,0 +1,6 @@
+{
+  "name": "جليس Jalees",
+  "description": "تطبيق محلي 100% يعمل في الخلفية للاستماع للمحادثات، الجلسات وجدولتها وتحويلها لنصوص باللغة العربية مع الحفاظ التام على خصوصيتك.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

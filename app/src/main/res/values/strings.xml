@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">جليس</string>
+    <string name="app_desc">استماع وتفريغ نصوص باللغة العربية محليًا 100%</string>
+    
+    <!-- Onboarding / Welcome -->
+    <string name="welcome_title">أهلاً بك في جليس</string>
+    <string name="welcome_desc">شاشتك الذكية والمحلية لتسجيل وتفريغ المحادثات الطويلة والمؤتمرات تلقائياً إلى نصوص عربية مقروءة، وبخصوصية مطلقة دون الحاجة للإنترنت.</string>
+    <string name="privacy_guarantee">درع الخصوصية: التطبيق يعمل دون إنترنت (Offline-First) 100%. بياناتك الصوتية ونصوصك لا تغادر جهازك أبداً.</string>
+    
+    <!-- Permissions -->
+    <string name="permissions_required">الأذونات المطلوبة</string>
+    <string name="mic_perm_title">مكالمات وتسجيل ريكورد (الميكروفون)</string>
+    <string name="mic_perm_desc">مطلوب لالتقاط الصوت الخام ومعالجته لتفريغه فوراً.</string>
+    <string name="notif_perm_title">الإشعارات الدائمة</string>
+    <string name="notif_perm_desc">مطلوب لضمان استمرار التسجيل والعمل في الخلفية دون انقطاع.</string>
+    <string name="battery_perm_title">تخطي تحسين البطارية</string>
+    <string name="battery_perm_desc">مطلوب لتفادي توقف الخدمة فجأة من قبل نظام الأندرويد.</string>
+    
+    <!-- Model download -->
+    <string name="model_setup_title">تهيئة حزمة الذكاء الاصطناعي</string>
+    <string name="model_setup_desc">يتم الآن تهيئة نموذج Whisper المكبوس (base.bin - 142MB) للذكاء الاصطناعي على المعالج محلياً.</string>
+    <string name="model_download_progress">جاري تنزيل وتثبيت النموذج المحلي: %1$d%%</string>
+    <string name="model_ready">تم تجهيز الحزمة المحلية بنجاح ومستعدة للعمل!</string>
+    <string name="grant_permissions">منح الأذونات والمتابعة</string>
+    
+    <!-- Main screen -->
+    <string name="search_hint">ابحث في الجلسات السابقة...</string>
+    <string name="no_sessions">لا توجد جلسات مسجلة بعد</string>
+    <string name="start_recording">ابدأ الاستماع الآن</string>
+    <string name="stop_recording">إيقاف الاستماع وحفظ الجلسة</string>
+    <string name="recording_active">جاري الاستماع والتفريغ في الخلفية...</string>
+    <string name="session_deleted">تم حذف الجلسة بنجاح</string>
+    
+    <!-- Session Detail -->
+    <string name="export_success">تم تصدير النص بنجاح!</string>
+    <string name="search_in_transcript">ابحث داخل تفريغ هذه الجلسة...</string>
+    <string name="speaker_label">متحدث</string>
+    
+    <!-- Common words -->
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+    <string name="delete">حذف</string>
+    <string name="rename">إعادة تسمية</string>
+    <string name="save">حفظ</string>
+    <string name="back">رجوع</string>
+    <string name="delete_confirm_title">حذف الجلسة؟</string>
+    <string name="delete_confirm_desc">هل أنت متأكد من رغبتك في حذف هذه الجلسة وتفريغها بالكامل؟ لا يمكن التراجع عن هذا الإجراء.</string>
+</resources>
+
