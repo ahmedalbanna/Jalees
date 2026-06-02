@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.Fts4
 
 @Entity(tableName = "sessions_table")
 data class Session(
@@ -30,4 +31,10 @@ data class Transcript(
     @ColumnInfo(name = "speaker_tag") val speakerTag: String,
     @ColumnInfo(name = "text_content") val textContent: String,
     @ColumnInfo(name = "relative_time") val relativeTime: Long // in milliseconds from session beginning
+)
+
+@Entity(tableName = "transcripts_fts_table")
+@Fts4(contentEntity = Transcript::class)
+data class TranscriptFts(
+    @ColumnInfo(name = "text_content") val textContent: String
 )

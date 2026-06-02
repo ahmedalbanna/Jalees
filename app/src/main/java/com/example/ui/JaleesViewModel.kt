@@ -65,7 +65,7 @@ class JaleesViewModel(application: Application) : AndroidViewModel(application) 
             if (query.isBlank()) {
                 repository.allSessions
             } else {
-                repository.searchSessions(query)
+                repository.searchSessionsWithFts(query)
             }
         }
         .stateIn(

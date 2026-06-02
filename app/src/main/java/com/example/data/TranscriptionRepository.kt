@@ -23,4 +23,15 @@ class TranscriptionRepository(private val dao: TranscriptionDao) {
         val formattedQuery = "%$query%"
         return dao.searchSessions(formattedQuery)
     }
+
+    fun searchSessionsWithFts(query: String): Flow<List<Session>> {
+        // For FTS MATCH, appending '*' allows prefix matching on the words
+        val formattedQuery = "$query*"
+        return dao.searchSessionsFts(formattedQuery)
+    }
+
+    fun searchTranscriptsWithFts(query: String): Flow<List<Transcript>> {
+        val formattedQuery = "$query*"
+        return dao.searchTranscriptsFts(formattedQuery)
+    }
 }

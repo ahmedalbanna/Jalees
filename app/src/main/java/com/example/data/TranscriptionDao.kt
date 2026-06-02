@@ -31,4 +31,21 @@ interface TranscriptionDao {
 
     @Query("SELECT DISTINCT s.* FROM sessions_table s LEFT JOIN transcripts_table t ON s.id = t.session_id WHERE s.title LIKE :query OR t.text_content LIKE :query ORDER BY s.start_timestamp DESC")
     fun searchSessions(query: String): Flow<List<Session>>
+
+    @Query("""
+        SELECT DISTINCT s.* FROM sessions_table s
+        JOIN transcripts_table t ON s.id = t.session_id
+        JOIN transcripts_fts_table fts ON t.id = fts.rowid
+        WHERE transcripts_fts_table MATCH :query
+        ORDER BY s.start_timestamp DESC
+    """)
+    fun searchSessionsFts(query: String): Flow<List<Session>>
+
+    @Query("""
+        SELECT t.* FROM transcripts_table t
+        JOIN transcripts_fts_table fts ON t.id = fts.rowid
+        WHERE transcripts_fts_table MATCH :query
+        ORDER BY t.relative_time ASC
+    """)
+    fun searchTranscriptsFts(query: String): Flow<List<Transcript>>
 }
