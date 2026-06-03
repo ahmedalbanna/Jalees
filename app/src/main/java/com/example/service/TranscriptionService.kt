@@ -25,6 +25,10 @@ import com.example.data.Session
 import com.example.data.TranscriptionRepository
 import com.example.vad.VadLib
 import kotlinx.coroutines.*
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import kotlin.math.log10
 import kotlin.math.max
 
@@ -41,6 +45,8 @@ class TranscriptionService : Service() {
     private var chunkCount = 0
     private var lastSpeechTime: Long = 0
     private var isSpeechActive = false
+    private var audioFile: File? = null
+    private var audioFileOutputStream: FileOutputStream? = null
 
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -128,6 +134,19 @@ class TranscriptionService : Service() {
         // Update database with Session's true end Timestamp
         val finalSessionId = currentSessionId
         val finalEndTime = System.currentTimeMillis()
+        val finalAudioFilePath = audioFile?.absolutePath
+        
+        // write wav header
+        audioFile?.let {
+            if (it.exists() && it.length() > 0) {
+                try {
+                    WavWriter.writeWavHeader(it, 16000, 1, 16)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+        
         serviceScope.launch {
             val db = AppDatabase.getDatabase(applicationContext)
             val repo = TranscriptionRepository(db.transcriptionDao())
@@ -138,7 +157,8 @@ class TranscriptionService : Service() {
                     id = session.id,
                     title = session.title,
                     startTimestamp = session.startTimestamp,
-                    endTimestamp = finalEndTime
+                    endTimestamp = finalEndTime,
+                    audioFilePath = finalAudioFilePath
                 )
                 repo.updateSession(updated)
             }
@@ -200,6 +220,14 @@ class TranscriptionService : Service() {
             return@withContext
         }
         
+        val audioDir = File(getExternalFilesDir(null), "recordings")
+        if (!audioDir.exists()) audioDir.mkdirs()
+        audioFile = File(audioDir, "session_${currentSessionId}_${System.currentTimeMillis()}.wav")
+        audioFileOutputStream = FileOutputStream(audioFile)
+        
+        // Reserve space for wav header 44 bytes
+        audioFileOutputStream?.write(ByteArray(44))
+        
         val vadLib = VadLib()
         var vadPtr = 0L
 
@@ -229,6 +257,10 @@ class TranscriptionService : Service() {
             while (isRecording) {
                 val readSize = audioRecord?.read(buffer, 0, buffer.size) ?: -1
                 if (readSize > 0) {
+                    val byteBuffer = ByteBuffer.allocate(readSize * 2).order(ByteOrder.LITTLE_ENDIAN)
+                    byteBuffer.asShortBuffer().put(buffer, 0, readSize)
+                    audioFileOutputStream?.write(byteBuffer.array())
+
                     var sum = 0.0
                     for (i in 0 until readSize) {
                         sum += buffer[i] * buffer[i]
@@ -283,6 +315,9 @@ class TranscriptionService : Service() {
             e.printStackTrace()
             simulateAudioCapture()
         } finally {
+            try {
+                audioFileOutputStream?.close()
+            } catch (e: Exception) {}
             if (vadPtr != 0L) {
                 vadLib.freeVad(vadPtr)
             }

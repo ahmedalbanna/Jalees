@@ -47,6 +47,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import android.media.MediaPlayer
 import androidx.core.content.ContextCompat
 import com.example.R
 import com.example.data.Session
@@ -275,7 +276,7 @@ fun OnboardingScreen(viewModel: JaleesViewModel) {
 
                             if (progress == 0 && !isModelReady) {
                                 Button(
-                                    onClick = { viewModel.startModelPreparation() },
+                                    onClick = { viewModel.startModelPreparation(context) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = EmeraldActive,
                                         contentColor = OnyxSlate
@@ -1072,10 +1073,20 @@ fun SessionDetailScreen(
     
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameInput by remember { mutableStateOf("") }
+    
+    val player = remember { MediaPlayer() }
+    var isPlaying by remember { mutableStateOf(false) }
 
     DisposableEffect(sessionId) {
         viewModel.navigateTo(AppScreen.Detail(sessionId))
-        onDispose {}
+        onDispose {
+            try {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            } catch (e: Exception) {}
+        }
     }
 
     Scaffold(
@@ -1096,6 +1107,35 @@ fun SessionDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (session?.audioFilePath != null) {
+                            IconButton(
+                                onClick = {
+                                    if (isPlaying) {
+                                        player.pause()
+                                        isPlaying = false
+                                    } else {
+                                        try {
+                                            player.reset()
+                                            player.setDataSource(session!!.audioFilePath)
+                                            player.prepare()
+                                            player.start()
+                                            isPlaying = true
+                                            player.setOnCompletionListener { isPlaying = false }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            Toast.makeText(context, "لم يتم العثور على الملف الصوتي", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = "Play/Pause",
+                                    tint = EmeraldActive
+                                )
+                            }
+                        }
+
                         IconButton(
                             onClick = {
                                 if (transcripts.isNotEmpty()) {

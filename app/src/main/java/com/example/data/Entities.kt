@@ -11,7 +11,8 @@ data class Session(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "start_timestamp") val startTimestamp: Long,
-    @ColumnInfo(name = "end_timestamp") val endTimestamp: Long
+    @ColumnInfo(name = "end_timestamp") val endTimestamp: Long,
+    @ColumnInfo(name = "audio_file_path") val audioFilePath: String? = null
 )
 
 @Entity(

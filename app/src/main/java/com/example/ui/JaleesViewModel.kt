@@ -123,8 +123,8 @@ class JaleesViewModel(application: Application) : AndroidViewModel(application) 
         _currentScreen.value = AppScreen.Main
     }
 
-    fun startModelPreparation() {
-        TranscriptionManager.startModelDownload()
+    fun startModelPreparation(context: Context) {
+        TranscriptionManager.startModelDownload(context)
     }
 
     fun navigateTo(screen: AppScreen) {
