@@ -259,7 +259,9 @@ class TranscriptionService : Service() {
                 return@withContext
             }
             
-            vadPtr = vadLib.initVad()
+            val prefs = getSharedPreferences("jalees_prefs", Context.MODE_PRIVATE)
+            val vadMode = prefs.getInt("vad_mode", 3)
+            vadPtr = vadLib.initVad(vadMode)
 
             audioRecord?.startRecording()
             // Using 160 samples (10ms) per frame for WebRTC VAD

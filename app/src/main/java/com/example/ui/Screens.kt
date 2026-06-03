@@ -74,6 +74,7 @@ fun JaleesAppContent(viewModel: JaleesViewModel) {
                 when (screen) {
                     is AppScreen.Onboarding -> OnboardingScreen(viewModel)
                     is AppScreen.Main -> MainScreen(viewModel)
+                    is AppScreen.Settings -> SettingsScreen(viewModel)
                     is AppScreen.Detail -> SessionDetailScreen(
                         sessionId = screen.sessionId,
                         viewModel = viewModel
@@ -477,6 +478,14 @@ fun MainScreen(viewModel: JaleesViewModel) {
 
                     // App Title
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { viewModel.navigateTo(AppScreen.Settings) }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = EmeraldActive
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -1490,3 +1499,173 @@ fun TranscriptRowItem(
         }
     }
 }
+
+// ----------------------------------------------------
+// SETTINGS SCREEN
+// ----------------------------------------------------
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(viewModel: JaleesViewModel) {
+    val vadMode by viewModel.vadMode.collectAsState()
+    val isModelValid by viewModel.isModelValid.collectAsState()
+    val modelProgress by viewModel.modelProgress.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.verifyModelIntegrity(context)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "الإعدادات والحالة",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = EmeraldActive)
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { viewModel.goBack() }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = EmeraldActive)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = OnyxSlate)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Brush.verticalGradient(colors = listOf(OnyxSlate, DeepCharcoal)))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // VAD Settings section
+            ElevatedCard(
+                colors = CardDefaults.elevatedCardColors(containerColor = DeepCharcoal),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "إعدادات الميكروفون المتقدمة (VAD Mode)",
+                        style = MaterialTheme.typography.titleMedium.copy(color = GoldAccent, fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "اختر حساسية اكتشاف النشاط الصوتي بناءً على بيئتك. الوضع الأكثر صرامة يقلل من الضوضاء ولكن قد يتجاهل الأصوات الخافتة.",
+                        style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val options = listOf(
+                        "طبيعي" to 0,
+                        "بيئة هادئة" to 1,
+                        "متفائل" to 2,
+                        "صارم جداً" to 3
+                    )
+
+                    options.forEach { (label, mode) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.setVadMode(mode) }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            RadioButton(
+                                selected = vadMode == mode,
+                                onClick = { viewModel.setVadMode(mode) },
+                                colors = RadioButtonDefaults.colors(selectedColor = EmeraldActive)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = label, style = MaterialTheme.typography.bodyMedium.copy(color = TextLight))
+                        }
+                    }
+                }
+            }
+
+            // Model Management Section
+            ElevatedCard(
+                colors = CardDefaults.elevatedCardColors(containerColor = DeepCharcoal),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "محرك الذكاء الاصطناعي أوفلاين",
+                        style = MaterialTheme.typography.titleMedium.copy(color = GoldAccent, fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "حالة النموذج:",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = TextLight)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (isModelValid) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = if (isModelValid) EmeraldActive else Color.Red,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isModelValid) "محمل وجاهز للعمل" else "غير متاح أو تالف",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = if (isModelValid) EmeraldActive else Color.Red,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (!isModelValid) {
+                        if (modelProgress > 0 && modelProgress < 100) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                LinearProgressIndicator(
+                                    progress = { modelProgress / 100f },
+                                    color = EmeraldActive,
+                                    trackColor = BorderColor,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = "جاري التحميل... $modelProgress%",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = GoldAccent)
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = { 
+                                    viewModel.startModelPreparation(context)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldActive, contentColor = OnyxSlate),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "تحميل النموذج الصوتي", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = { 
+                                viewModel.startModelPreparation(context) 
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepCharcoal, contentColor = EmeraldActive),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = "إعادة تحميل النموذج", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

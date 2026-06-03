@@ -23,6 +23,7 @@ import java.util.*
 sealed interface AppScreen {
     object Onboarding : AppScreen
     object Main : AppScreen
+    object Settings : AppScreen
     data class Detail(val sessionId: Int) : AppScreen
 }
 
@@ -84,6 +85,24 @@ class JaleesViewModel(application: Application) : AndroidViewModel(application) 
     // Setup Model Progress States
     val modelProgress: StateFlow<Int> = TranscriptionManager.modelProgress
     val isModelReady: StateFlow<Boolean> = TranscriptionManager.isModelReady
+    
+    // Settings States
+    private val _vadMode = MutableStateFlow(sharedPrefs.getInt("vad_mode", 3))
+    val vadMode: StateFlow<Int> = _vadMode.asStateFlow()
+    
+    private val _isModelValid = MutableStateFlow(false)
+    val isModelValid: StateFlow<Boolean> = _isModelValid.asStateFlow()
+    
+    fun setVadMode(mode: Int) {
+        sharedPrefs.edit().putInt("vad_mode", mode).apply()
+        _vadMode.value = mode
+    }
+
+    fun verifyModelIntegrity(context: Context) {
+        val isValid = TranscriptionManager.verifyModelFile(context)
+        _isModelValid.value = isValid
+    }
+
 
     // Current Detail Session States
     private val _selectedSessionId = MutableStateFlow<Int?>(null)

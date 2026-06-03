@@ -11,16 +11,17 @@ struct vad_context {
 
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_com_example_vad_VadLib_initVad(JNIEnv *env, jobject thiz) {
-    LOGI("Initializing WebRTC VAD context");
+Java_com_example_vad_VadLib_initVad(JNIEnv *env, jobject thiz, jint mode) {
+    LOGI("Initializing WebRTC VAD context with mode %d", mode);
     
     // In actual implementation:
     // WebRtcVad_Create(&vad_inst);
     // WebRtcVad_Init(vad_inst);
-    // WebRtcVad_set_mode(vad_inst, 3); // Very aggressive
+    // WebRtcVad_set_mode(vad_inst, mode);
     
     struct vad_context * ctx = new vad_context;
-    ctx->mode = 3;
+    // ensure mode is within a valid range in real scenario
+    ctx->mode = mode;
     
     return reinterpret_cast<jlong>(ctx);
 }

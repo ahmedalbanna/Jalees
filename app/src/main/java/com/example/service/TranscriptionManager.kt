@@ -143,6 +143,13 @@ object TranscriptionManager {
         _isModelReady.value = ready
     }
 
+    fun verifyModelFile(context: Context): Boolean {
+        val modelDir = File(context.getExternalFilesDir(null), "models")
+        val outputFile = File(modelDir, "ggml-tiny.bin")
+        // Check if file exists and has a reasonable size (e.g. > 10MB)
+        return outputFile.exists() && outputFile.length() > 10 * 1024 * 1024
+    }
+
     // Commits a newly transcribed sentence to the local Room database
     fun commitSentence(context: Context, sessionId: Int, speaker: String, text: String, relativeTimeMs: Long) {
         managerScope.launch {

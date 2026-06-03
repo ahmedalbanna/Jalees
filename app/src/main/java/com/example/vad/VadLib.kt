@@ -9,9 +9,10 @@ class VadLib {
 
     /**
      * Initializes the VAD context.
+     * @param mode VAD operating mode. 0=Normal, 1=Low Bitrate, 2=Aggressive, 3=Very Aggressive
      * @return a pointer to the VAD instance.
      */
-    external fun initVad(): Long
+    external fun initVad(mode: Int): Long
 
     /**
      * Frees the VAD context.
