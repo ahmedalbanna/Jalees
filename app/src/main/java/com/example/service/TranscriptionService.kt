@@ -232,13 +232,27 @@ class TranscriptionService : Service() {
         var vadPtr = 0L
 
         try {
-            audioRecord = AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                sampleRate,
-                channelConfig,
-                audioFormat,
-                bufferSize
-            )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val attributionContext = createAttributionContext("JaleesAudioCapture")
+                audioRecord = AudioRecord.Builder()
+                    .setAudioSource(MediaRecorder.AudioSource.MIC)
+                    .setAudioFormat(android.media.AudioFormat.Builder()
+                        .setEncoding(audioFormat)
+                        .setSampleRate(sampleRate)
+                        .setChannelMask(channelConfig)
+                        .build())
+                    .setBufferSizeInBytes(bufferSize)
+                    .setContext(attributionContext)
+                    .build()
+            } else {
+                audioRecord = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleRate,
+                    channelConfig,
+                    audioFormat,
+                    bufferSize
+                )
+            }
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
                 simulateAudioCapture()
